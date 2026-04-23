@@ -1,0 +1,7 @@
+{
+  "name": "Hotata Airer",
+  "hacs": "1.6.0",
+  "domains": ["cover", "light", "switch", "sensor", "binary_sensor"],
+  "iot_class": "Cloud Polling",
+  "homeassistant": "2024.1.0"
+}
