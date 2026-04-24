@@ -1,7 +1,7 @@
 ﻿{
   "domain": "hotata_airer",
   "name": "Hotata Airer (好太太晾衣机)",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "documentation": "https://github.com/C3H3-AI/ha-hotata-airer",
   "issue_tracker": "https://github.com/C3H3-AI/ha-hotata-airer/issues",
   "requirements": ["homeassistant>=2024.1"],
