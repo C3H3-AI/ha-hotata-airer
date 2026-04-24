@@ -214,8 +214,6 @@ class HotataHub:
                 ts = int(time.time() * 1000)
                 payload = {
                     "refreshToken": self._refresh_token,
-                    "userid": self.user_id,
-                    "userId": self.user_id,
                     "appKey": APP_KEY,
                     "appVersion": APP_VERSION,
                     "timestamp": ts,
