@@ -1,15 +1,11 @@
-"""Binary sensor platform for Hotata Airer - device online status."""
+"""Binary sensor platform for Hotata Airer."""
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,22 +15,6 @@ from .hub import HotataHub
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HotataBinarySensorDescription(BinarySensorEntityDescription):
-    """Description for a Hotata binary sensor."""
-    pass
-
-
-BINARY_SENSOR_DESCRIPTIONS: tuple[HotataBinarySensorDescription, ...] = (
-    HotataBinarySensorDescription(
-        key="online",
-        name="Online Status",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        icon="mdi:cloud-outline",
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -42,46 +22,70 @@ async def async_setup_entry(
 ) -> None:
     """Set up the binary sensor platform."""
     hub: HotataHub = hass.data["hotata_airer"][entry.entry_id]
-    entities = [HotataBinarySensor(hub, desc) for desc in BINARY_SENSOR_DESCRIPTIONS]
-    async_add_entities(entities)
+    async_add_entities([OnlineSensor(hub), PowerSensor(hub)])
 
 
-class HotataBinarySensor(BinarySensorEntity):
-    """Representation of a Hotata binary sensor (online status)."""
+class OnlineSensor(BinarySensorEntity):
+    """Device online status sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        hub: HotataHub,
-        description: HotataBinarySensorDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
+    def __init__(self, hub: HotataHub) -> None:
+        """Initialize the sensor."""
         self._hub = hub
-        self.entity_description = description
-        self._attr_unique_id = f"{hub.iot_id}_{description.key}"
+        self._attr_name = "在线状态"
+        self._attr_unique_id = f"{hub.iot_id}_online"
         self._attr_device_info = hub.device_info
-        self._attr_is_on: bool | None = None
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
-        self._attr_is_on = self._hub.state.online
         self.async_write_ha_state()
         self._hub.add_listener(self._handle_update)
 
     async def _handle_update(self) -> None:
-        """Handle state update from hub."""
-        if self._hub._token_expired:
-            self._attr_available = False
-            self.async_write_ha_state()
-            return
-        self._attr_available = True
-        new_val = self._hub.state.online
-        if new_val != self._attr_is_on:
-            self._attr_is_on = new_val
-            self.async_write_ha_state()
+        """Handle state update."""
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the device is online."""
-        return self._attr_is_on
+        """Return True if device is online."""
+        return self._hub.state.online
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return not self._hub.token_expired
+
+
+class PowerSensor(BinarySensorEntity):
+    """Power switch status sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.POWER
+    _attr_has_entity_name = True
+
+    def __init__(self, hub: HotataHub) -> None:
+        """Initialize the sensor."""
+        self._hub = hub
+        self._attr_name = "电源开关"
+        self._attr_unique_id = f"{hub.iot_id}_power"
+        self._attr_device_info = hub.device_info
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        self.async_write_ha_state()
+        self._hub.add_listener(self._handle_update)
+
+    async def _handle_update(self) -> None:
+        """Handle state update."""
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if power is on."""
+        return self._hub.state.power_on
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return not self._hub.token_expired

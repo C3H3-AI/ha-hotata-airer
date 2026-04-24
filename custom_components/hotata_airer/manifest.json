@@ -1,13 +1,12 @@
-{
+﻿{
   "domain": "hotata_airer",
-  "name": "Hotata Airer",
-  "version": "1.1.0",
-  "codeowners": ["@C3H3-AI"],
-  "config_flow": true,
+  "name": "Hotata Airer (好太太晾衣机)",
+  "version": "2.1.1",
   "documentation": "https://github.com/C3H3-AI/ha-hotata-airer",
-  "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/C3H3-AI/ha-hotata-airer/issues",
-  "loggers": ["custom_components.hotata_airer"],
-  "requirements": [],
-  "integration_type": "device"
+  "requirements": ["homeassistant>=2024.1"],
+  "codeowners": ["@C3H3-AI"],
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "icon": "mdi:clothesline"
 }

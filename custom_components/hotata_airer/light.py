@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -42,28 +43,23 @@ class HotataLight(LightEntity):
     def __init__(self, hub: HotataHub) -> None:
         """Initialize the light."""
         self._hub = hub
-        self._attr_name = "Light"
+        self._attr_name = "照明"
         self._attr_unique_id = f"{hub.iot_id}_light"
         self._attr_device_info = hub.device_info
         self._is_on: bool = False
-        self._brightness: int = 255  # HA scale (1-255)
+        self._brightness: int = 255
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self._is_on = self._hub.state.light_on or False
         b = self._hub.state.light_brightness
         if b is not None:
-            self._brightness = value_to_brightness(b, 1, 100)
-        self.async_write_ha_state()  # Write initial state
+            self._brightness = value_to_brightness((1, 100), b)
+        self.async_write_ha_state()
         self._hub.add_listener(self._handle_update)
 
     async def _handle_update(self) -> None:
         """Handle state update from hub."""
-        if self._hub._token_expired:
-            self._attr_available = False
-            self.async_write_ha_state()
-            return
-        self._attr_available = True
         changed = False
 
         new_on = self._hub.state.light_on
@@ -73,7 +69,7 @@ class HotataLight(LightEntity):
 
         new_b = self._hub.state.light_brightness
         if new_b is not None:
-            ha_b = value_to_brightness(new_b, 1, 100)
+            ha_b = value_to_brightness((1, 100), new_b)
             if ha_b != self._brightness:
                 self._brightness = ha_b
                 changed = True
@@ -91,18 +87,24 @@ class HotataLight(LightEntity):
         """Return the brightness in HA scale (1-255)."""
         return self._brightness
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return not self._hub.token_expired
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, optionally with brightness."""
-        # Send brightness first if specified
-        if ATTR_BRIGHTNESS in kwargs:
-            target = brightness_to_value(kwargs[ATTR_BRIGHTNESS], 1, 100)
-            await self._hub.set_brightness(int(target))
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-
-        # Then turn on light if not already on
+        # 先开灯（如果尚未开），再调亮度
         if not self._is_on:
             await self._hub.control_switch("LightSwitch", True)
             self._is_on = True
+            # 短暂等待设备响应
+            await asyncio.sleep(0.2)
+
+        if ATTR_BRIGHTNESS in kwargs:
+            target = brightness_to_value((1, 100), kwargs[ATTR_BRIGHTNESS])
+            await self._hub.set_brightness(int(target))
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         self.async_write_ha_state()
 

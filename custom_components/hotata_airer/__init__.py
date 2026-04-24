@@ -26,15 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "sensor",
     ])
 
-    # Try connection test, but always start polling regardless
-    # Even if test fails (e.g. token refresh fails), the current token may still work
-    try:
-        await hub.async_test_connection()
-    except Exception:
-        pass
-
-    # Always start periodic polling
-    _LOGGER.info("Starting Hotata Airer polling (interval=%ds)", 5)
+    _LOGGER.info("Starting Hotata Airer polling")
     await hub.start_polling()
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -59,4 +51,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "switch",
         "sensor",
     ])
+
     return unload_ok
