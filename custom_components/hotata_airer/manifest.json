@@ -4,9 +4,10 @@
   "version": "2.1.1",
   "documentation": "https://github.com/C3H3-AI/ha-hotata-airer",
   "issue_tracker": "https://github.com/C3H3-AI/ha-hotata-airer/issues",
-  "requirements": ["homeassistant>=2024.1"],
+  "requirements": [],
   "codeowners": ["@C3H3-AI"],
   "iot_class": "cloud_polling",
+  "integration_type": "device",
   "config_flow": true,
   "icon": "mdi:clothesline"
 }
