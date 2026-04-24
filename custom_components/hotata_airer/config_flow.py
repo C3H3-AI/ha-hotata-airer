@@ -85,7 +85,16 @@ async def _init_from_refresh_token(
                 headers=headers,
                 timeout=10,
             )
-            data = resp.json()
+            _LOGGER.debug("Refresh token response status: %s", resp.status_code)
+            _LOGGER.debug("Refresh token response text: %s", resp.text[:500])
+
+            # 尝试解析 JSON，失败时打印详细信息
+            try:
+                data = resp.json()
+            except Exception as json_err:
+                _LOGGER.error("Failed to parse JSON response: %s. Response: %s", json_err, resp.text[:500])
+                return None
+
             _LOGGER.debug("Refresh token response: %s", data)
 
             if data.get("code") != "000":

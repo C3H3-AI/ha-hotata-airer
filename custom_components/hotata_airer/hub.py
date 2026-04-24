@@ -230,7 +230,15 @@ class HotataHub:
                     headers={"content-type": "application/json"},
                     timeout=10,
                 )
-                data = resp.json()
+                _LOGGER.debug("Refresh token response status: %s, text: %s", resp.status_code, resp.text[:200])
+
+                try:
+                    data = resp.json()
+                except Exception as json_err:
+                    _LOGGER.error("Failed to parse token refresh JSON: %s. Response: %s", json_err, resp.text[:500])
+                    self._token_expired = True
+                    return False
+
                 _LOGGER.debug("Refresh API response: code=%s", data.get("code"))
 
                 if data.get("code") == "000":
