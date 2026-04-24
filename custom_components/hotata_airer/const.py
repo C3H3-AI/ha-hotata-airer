@@ -1,0 +1,20 @@
+
+POLL_INTERVAL = 5  # Match NodeRED polling (5 seconds)
+API_PROPERTY_GET = "https://saas.keyoo.com/app-api/v2.0/device/property/get"
+API_PROPERTY_SET = "https://saas.keyoo.com/app-api/v2.0/device/property/set2"
+API_INVOKE2 = "https://saas.keyoo.com/app-api/v2.0/device/service/invoke2"
+API_ONLINE_STATUS = "https://saas.keyoo.com/app-api/v2.0/device/synOnlineStatus"
+API_REFRESH_TOKEN = "https://saas.keyoo.com/app-api/v2.0/login/spLogin/refreshToken"
+APP_KEY = "miniapp-hotata-prod"
+# APP_SECRET for miniapp-hotata-prod (private repo only)
+APP_SECRET = "B322B40A-DBD2-26A2-F935-6E760917CB73"
+APP_VERSION = "miniapp_4.4.5.1"
+IMEI = "Windows 10 x64_w4.1.7.33_s3.14.3"
+PHONE_MODEL = "microsoft"
+SYS_VERSION = "Windows 10 x64"
+DEFAULT_NAME = "Hotata Airer"
+CONF_ACCESS_TOKEN = "access_token"
+CONF_REFRESH_TOKEN = "refresh_token"
+CONF_USER_ID = "user_id"
+CONF_IOT_ID = "iot_id"
+DOMAIN = "hotata_airer"
