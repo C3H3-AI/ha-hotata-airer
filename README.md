@@ -1,108 +1,121 @@
 # Hotata Airer (好太太智能晾衣机)
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![License](https://img.shields.io/github/license/C3H3-AI/ha-hotata-airer.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/C3H3-AI/ha-hotata-airer?style=flat-square)](https://github.com/C3H3-AI/ha-hotata-airer/releases)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square)](https://github.com/hacs/integration)
 
-Home Assistant 自定义集成，用于控制好太太（Hotata）智能晾衣机。
+Home Assistant 自定义集成，支持好太太智能晾衣机的完整控制。
 
 ## 功能特性
 
-- ✅ 晾衣架升降控制 (Cover)
-- ✅ 照明灯开关与亮度调节 (Light)
-- ✅ 电源、烘干、风干、消毒、负离子开关 (Switch)
-- ✅ 位置、剩余时间等传感器 (Sensor)
-- ✅ 设备在线状态监测 (Binary Sensor)
-- ✅ 自动 Token 刷新
-- ✅ 5秒轮询实时同步状态
+| 功能 | 说明 |
+|------|------|
+| 晾衣架升降 | cover 实体，支持开/关/停 |
+| 照明控制 | light 实体，支持开关和亮度调节 |
+| 电源状态 | binary_sensor 实体，实时监测 |
+| 烘干/风干/消毒/负离子 | switch 实体，独立控制 |
+| 定时提醒 | sensor 实体，显示剩余时间 |
+| 在线状态 | binary_sensor 实体，设备连接状态 |
+| 自动 Token 刷新 | 无需手动刷新，长期稳定运行 |
 
-## 支持的设备
+## 安装方式
 
-- 好太太智能晾衣机（需支持 Keyoo 云平台）
+### 方式一：HACS (推荐)
 
-## 安装
+1. 安装 [HACS](https://hacs.xyz/)
+2. HACS → 集成 → 右上角三点菜单 → 添加自定义存储库
+3. 仓库地址: `https://github.com/C3H3-AI/ha-hotata-airer`
+4. 搜索并安装 **Hotata Airer**
+5. 重启 Home Assistant
 
-### 方法 1: HACS (推荐)
+### 方式二：手动安装
 
-1. 打开 HACS → 自定义存储库
-2. 添加存储库: `https://github.com/C3H3-AI/ha-hotata-airer`
-3. 类别选择: **Integration**
-4. 安装后重启 Home Assistant
+```bash
+# 克隆仓库
+git clone https://github.com/C3H3-AI/ha-hotata-airer.git
 
-### 方法 2: 手动安装
+# 复制到 HA 自定义组件目录
+cp -r custom_components/hotata_airer /path/to/your/ha/config/custom_components/
 
-1. 下载最新 Release
-2. 将 `custom_components/hotata_airer` 复制到 HA 的 `custom_components/` 目录
-3. 重启 Home Assistant
+# 重启 HA
+```
 
 ## 配置
 
-### 获取 refreshToken
+集成通过 UI 配置，无需编辑 YAML。
 
-1. 打开**好太太智家**微信小程序
-2. 长按晾衣机设备 → **设备信息** → **下载日志**
-3. 在下载的日志文件中搜索 `refreshToken`，复制其值
+1. **配置 → 设备与服务 → 添加集成**
+2. 搜索 **Hotata Airer**
+3. 填入从微信好太太小程序抓包获取的 **refreshToken**
 
-### 配置步骤
+### 配置参数说明
 
-1. 进入 **设置** → **设备与服务** → **添加集成**
-2. 搜索 "Hotata Airer"
-3. 输入 **refreshToken**（粘贴上一步获取的值）
-4. 点击提交，完成配置
+| 参数 | 说明 |
+|------|------|
+| refreshToken | 必填，从微信好太太小程序抓包获取 |
+| 名称 | 可选，设备显示名称 |
 
-> 💡 无需手动填写 userId、iotId 等信息，集成会自动获取。
+> **提示**: 只需提供 refreshToken，其他参数会自动获取。
 
-## 图标
+## 实体列表
 
-集成自带应用图标：
-- `icons/app_logo.png` - 应用Logo
-- `icons/product.png` - 产品图片
+### binary_sensor (状态传感器)
 
-## 实体说明
+| 实体 ID | 中文名称 | 说明 |
+|---------|---------|------|
+| `binary_sensor.hotata_airer_online_status` | 在线状态 | 设备是否在线 |
+| `binary_sensor.hao_tai_tai_liang_yi_ji_dian_yuan_kai_guan` | 电源开关 | 电源是否开启 |
 
-| 实体 | 类型 | 说明 |
-|------|------|------|
-| `cover.hotata_airer_airer` | Cover | 晾衣架升降控制 |
-| `light.hotata_airer_light` | Light | 照明灯开关/亮度 |
-| `switch.hotata_airer_power` | Switch | 电源开关 |
-| `switch.hotata_airer_drying` | Switch | 烘干功能 |
-| `switch.hotata_airer_air_drying` | Switch | 风干功能 |
-| `switch.hotata_airer_disinfection` | Switch | 消毒功能 |
-| `switch.hotata_airer_ions` | Switch | 负离子功能 |
-| `sensor.hotata_airer_position` | Sensor | 晾衣架位置 (%) |
-| `sensor.hotata_airer_light_remaining_time` | Sensor | 照明剩余时间 (分钟) |
-| `sensor.hotata_airer_disinfection_remaining_time` | Sensor | 消毒剩余时间 (分钟) |
-| `binary_sensor.hotata_airer_online_status` | Binary Sensor | 设备在线状态 |
+### cover (晾衣架)
 
-## 技术信息
+| 实体 ID | 中文名称 | 说明 |
+|---------|---------|------|
+| `cover.hao_tai_tai_liang_yi_ji` | 晾衣机 | 晾衣架升降控制 |
 
-- **API 端点**: `saas.keyoo.com/app-api/v2.0/`
-- **轮询间隔**: 5 秒
-- **Token 有效期**: 约 30 天（自动刷新）
+### light (照明)
 
-## 注意事项
+| 实体 ID | 中文名称 | 说明 |
+|---------|---------|------|
+| `light.hao_tai_tai_liang_yi_ji_zhao_ming` | 照明 | 灯光开关和亮度控制 |
 
-1. **refresh_token 是一次性的**，不要同时在多个地方刷新
-2. 如果集成显示 `unavailable`，可能是 token 过期，需要重新配置
-3. 设备断电后会显示离线状态
+### sensor (传感器)
 
-## 故障排除
+| 实体 ID | 中文名称 | 说明 |
+|---------|---------|------|
+| `sensor.hao_tai_tai_liang_yi_ji_position` | 位置 | 当前晾衣架位置 |
+| `sensor.hao_tai_tai_liang_yi_ji_light_remaining_time` | 照明剩余时间 | 照明定时剩余分钟数 |
+| `sensor.hao_tai_tai_liang_yi_ji_disinfection_remaining_time` | 消毒剩余时间 | 消毒定时剩余分钟数 |
+| `sensor.hao_tai_tai_liang_yi_ji_drying_remaining_time` | 烘干剩余时间 | 烘干定时剩余分钟数 |
+| `sensor.hao_tai_tai_liang_yi_ji_air_drying_remaining_time` | 风干剩余时间 | 风干定时剩余分钟数 |
+| `sensor.hao_tai_tai_liang_yi_ji_ions_remaining_time` | 负离子剩余时间 | 负离子定时剩余分钟数 |
+| `sensor.hao_tai_tai_liang_yi_ji_motor_control_mode` | 电机模式 | 当前运行模式 |
 
-### 实体显示 unavailable
+### switch (开关)
 
-1. 检查设备是否正常通电
-2. 检查 token 是否过期（查看在线状态实体）
-3. 重新配置集成，使用新的 token
+| 实体 ID | 中文名称 | 说明 |
+|---------|---------|------|
+| `switch.hao_tai_tai_liang_yi_ji_dian_yuan` | 电源 | 总电源开关 |
+| `switch.hao_tai_tai_liang_yi_ji_hong_gan` | 烘干 | 烘干功能开关 |
+| `switch.hao_tai_tai_liang_yi_ji_feng_gan` | 风干 | 风干功能开关 |
+| `switch.hao_tai_tai_liang_yi_ji_xiao_du` | 消毒 | 消毒功能开关 |
+| `switch.hao_tai_tai_liang_yi_ji_fu_li_zi` | 负离子 | 负离子功能开关 |
 
-### 无法控制设备
+## 故障排查
 
-1. 确认设备在线
-2. 检查 HA 日志是否有 API 错误
-3. 尝试重启 Home Assistant
+| 问题 | 解决方案 |
+|------|----------|
+| 实体不出现 | 重启 HA，检查 refreshToken 是否正确 |
+| 设备离线 | 检查网络连接，确认 token 未过期 |
+| 控制无响应 | 检查 HA 日志查看错误信息 |
 
-## 免责声明
+## 版本历史
 
-本集成为非官方开发，使用好太太开放 API。作者不对设备损坏或数据丢失负责。
+- **v2.1.0**: 同步本地最新版本，优化 Token 刷新机制
+- **v2.0.0**: 初始公开版本
 
-## 许可证
+## License
 
-[MIT](LICENSE) © C3H3-AI
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
+
+---
+
+Made with ❤️ by [C3H3-AI](https://github.com/C3H3-AI)

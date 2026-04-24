@@ -92,7 +92,8 @@ class LightRemainingTimeSensor(SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the remaining time value."""
-        return self._hub.state.light_remaining_time
+        val = self._hub.state.light_remaining_time
+        return int(val) if val is not None else None
 
     @property
     def available(self) -> bool:
@@ -126,7 +127,8 @@ class DisinfectionRemainingTimeSensor(SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the remaining time value."""
-        return self._hub.state.disinfection_remaining_time
+        val = self._hub.state.disinfection_remaining_time
+        return int(val) if val is not None else None
 
     @property
     def available(self) -> bool:
@@ -160,7 +162,8 @@ class DryingRemainingTimeSensor(SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the remaining time value."""
-        return self._hub.state.drying_remaining_time
+        val = self._hub.state.drying_remaining_time
+        return int(val) if val is not None else None
 
     @property
     def available(self) -> bool:
@@ -194,7 +197,8 @@ class AirDryingRemainingTimeSensor(SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the remaining time value."""
-        return self._hub.state.air_drying_remaining_time
+        val = self._hub.state.air_drying_remaining_time
+        return int(val) if val is not None else None
 
     @property
     def available(self) -> bool:
@@ -203,7 +207,7 @@ class AirDryingRemainingTimeSensor(SensorEntity):
 
 
 class IonsRemainingTimeSensor(SensorEntity):
-    """Ions (负离子) remaining time sensor."""
+    """Ions remaining time sensor."""
 
     _attr_native_unit_of_measurement = "min"
     _attr_state_class = "measurement"
@@ -228,7 +232,8 @@ class IonsRemainingTimeSensor(SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the remaining time value."""
-        return self._hub.state.ions_remaining_time
+        val = self._hub.state.ions_remaining_time
+        return int(val) if val is not None else None
 
     @property
     def available(self) -> bool:
