@@ -1,0 +1,16 @@
+{
+  "domain": "hotata_airer",
+  "name": "Hotata Airer (好太太晾衣机)",
+  "version": "2.1.0",
+  "documentation": "https://github.com/C3H3-AI/hotata_airer_ha",
+  "issue_tracker": "https://github.com/C3H3-AI/hotata_airer_ha/issues",
+  "requirements": ["homeassistant>=2024.1"],
+  "codeowners": ["@your-github-username"],
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "icons": {
+    "cover": "cover/airer",
+    "light": "light/lightbulb",
+    "switch": "switch/switch"
+  }
+}
