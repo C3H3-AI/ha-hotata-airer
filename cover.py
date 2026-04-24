@@ -1,4 +1,4 @@
-"""Cover platform for Hotata Airer Simple."""
+"""Cover platform for Hotata Airer."""
 
 from __future__ import annotations
 

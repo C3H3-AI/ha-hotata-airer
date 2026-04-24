@@ -1,4 +1,4 @@
-"""Config flow for Hotata Airer Simple integration."""
+﻿"""Config flow for Hotata Airer Simple integration."""
 
 from __future__ import annotations
 

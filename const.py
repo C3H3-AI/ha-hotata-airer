@@ -1,4 +1,4 @@
-"""Constants for Hotata Airer Simple integration."""
+"""Constants for Hotata Airer integration."""
 
 POLL_INTERVAL = 5
 API_BASE = "https://saas.keyoo.com/app-api/v2.0"
@@ -7,7 +7,7 @@ API_DEVICE_LIST = f"{API_BASE}/sp/device/getSpDeviceList"
 API_PROPERTY_GET = f"{API_BASE}/device/property/get"
 API_PROPERTY_SET = f"{API_BASE}/device/property/set2"
 API_INVOKE2 = f"{API_BASE}/device/service/invoke2"
-API_ONLINE_STATUS = f"{API_BASE}/device/synOnlineStatus"  # 新增
+API_ONLINE_STATUS = f"{API_BASE}/device/synOnlineStatus"
 
 # App fixed parameters (from APK/HAR analysis)
 APP_KEY = "miniapp-hotata-prod"

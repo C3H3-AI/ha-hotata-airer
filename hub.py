@@ -1,4 +1,4 @@
-"""Core Hub for Hotata Airer Simple API communication."""
+﻿"""Core Hub for Hotata Airer Simple API communication."""
 
 from __future__ import annotations
 

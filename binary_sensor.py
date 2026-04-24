@@ -1,4 +1,4 @@
-"""Binary sensor platform for Hotata Airer Simple."""
+"""Binary sensor platform for Hotata Airer."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Hotata Airer Simple - Custom Home Assistant Integration."""
+"""Hotata Airer - Custom Home Assistant Integration."""
 
 import logging
 
@@ -51,4 +51,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "switch",
         "sensor",
     ])
+
     return unload_ok
