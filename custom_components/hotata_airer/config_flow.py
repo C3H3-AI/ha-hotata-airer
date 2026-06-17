@@ -69,7 +69,6 @@ async def _init_from_refresh_token(
             "imei": IMEI,
         }
         refresh_payload["sign"] = generate_sign(refresh_payload)
-        # 注意：不添加 userid/userId 空字段，完全模仿 cURL
 
         headers = {
             "content-type": "application/json",
@@ -88,7 +87,6 @@ async def _init_from_refresh_token(
             _LOGGER.debug("Refresh token response status: %s", resp.status_code)
             _LOGGER.debug("Refresh token response text: %s", resp.text[:500])
 
-            # 尝试解析 JSON，失败时打印详细信息
             try:
                 data = resp.json()
             except Exception as json_err:
@@ -102,7 +100,6 @@ async def _init_from_refresh_token(
                 return None
 
             d = data.get("data", {})
-            # 尝试获取 userId，可能字段名为 "userId" 或 "userid"
             user_id = d.get("userId") or d.get("userid")
             if not user_id:
                 _LOGGER.error("No userId in refresh response: %s", d)
@@ -118,7 +115,7 @@ async def _init_from_refresh_token(
             _LOGGER.exception("Refresh token request error: %s", e)
             return None
 
-        # Step 2: Get device list to find iotId
+        # Step 2: Get device list
         ts = int(time.time() * 1000)
         list_payload = {
             "userid": user_id,
@@ -156,6 +153,7 @@ async def _init_from_refresh_token(
                 _LOGGER.error("No devices found")
                 return None
 
+            # Return tokens + first device
             iot_id = devices[0].get("iotid") or devices[0].get("iotId")
             if not iot_id:
                 _LOGGER.error("No iotId in first device: %s", devices[0])
@@ -211,15 +209,50 @@ async def _init_from_refresh_token(
         }
 
 
+async def _get_device_list(
+    hass: HomeAssistant,
+    access_token: str,
+    user_id: str,
+) -> list[dict[str, Any]]:
+    """Fetch device list from API."""
+    ts = int(time.time() * 1000)
+    payload = {
+        "userid": user_id,
+        "userId": user_id,
+        "appKey": APP_KEY,
+        "appVersion": APP_VERSION,
+        "timestamp": ts,
+        "traceId": f"ha_list_{ts}",
+        "sysVersion": SYS_VERSION,
+        "phoneModel": PHONE_MODEL,
+        "imei": IMEI,
+    }
+    payload["sign"] = generate_sign(payload)
+
+    async with httpx_client.get_async_client(hass) as client:
+        try:
+            resp = await client.post(
+                API_DEVICE_LIST,
+                json=payload,
+                headers={
+                    "content-type": "application/json",
+                    "authorization": access_token,
+                },
+                timeout=10,
+            )
+            data = resp.json()
+            return data.get("data", []) if data.get("code") == "000" else []
+        except Exception as e:
+            _LOGGER.error("Device list error: %s", e)
+            return []
+
+
 class HotataAirerSimpleConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -229,13 +262,52 @@ class HotataAirerSimpleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if credentials is not None:
+                # Store for potential multi-device flow
+                self._auth_data = credentials
+
+                # Get device list for uniqueness check
+                devices = await _get_device_list(
+                    self.hass,
+                    credentials[CONF_ACCESS_TOKEN],
+                    credentials[CONF_USER_ID],
+                )
+
+                # Find devices not yet configured
+                existing_ids = {
+                    e.data.get(CONF_IOT_ID)
+                    for e in self._async_current_entries()
+                }
+                unconfigured = [
+                    d for d in devices
+                    if (d.get("iotid") or d.get("iotId")) not in existing_ids
+                ]
+
+                if len(unconfigured) > 1:
+                    # Multiple devices available → let user pick
+                    self._all_devices = devices
+                    return await self.async_step_pick_device()
+
+                # Single (or first) device → create entry directly
+                target = unconfigured[0] if unconfigured else devices[0]
+                iot_id = target.get("iotid") or target.get("iotId")
+                device_name = (
+                    target.get("deviceName")
+                    or target.get("name")
+                    or f"好太太晾衣机 ({iot_id[:8]})"
+                )
+
+                await self.async_set_unique_id(iot_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=device_name,
                     data={
                         **credentials,
-                        CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
+                        CONF_IOT_ID: iot_id,
+                        CONF_NAME: device_name,
                     },
                 )
+
             errors["base"] = "invalid_auth"
 
         schema = vol.Schema(
@@ -254,43 +326,61 @@ class HotataAirerSimpleConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reconfigure(
+    async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        reconfigure_entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
+        """Step to select which device to add."""
+        existing_ids = {
+            e.data.get(CONF_IOT_ID)
+            for e in self._async_current_entries()
+        }
+
+        unconfigured = [
+            d for d in self._all_devices
+            if (d.get("iotid") or d.get("iotId")) not in existing_ids
+        ]
+
+        if not unconfigured:
+            return self.async_abort(reason="all_devices_configured")
 
         if user_input is not None:
-            credentials = await _init_from_refresh_token(
-                self.hass,
-                user_input[CONF_REFRESH_TOKEN],
+            iot_id = user_input["iot_id"]
+            device = next(
+                d for d in self._all_devices
+                if (d.get("iotid") or d.get("iotId")) == iot_id
+            )
+            device_name = (
+                device.get("deviceName")
+                or device.get("name")
+                or f"好太太晾衣机 ({iot_id[:8]})"
             )
 
-            if credentials is not None:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates={
-                        **credentials,
-                        CONF_NAME: user_input.get(CONF_NAME, reconfigure_entry.data.get(CONF_NAME, DEFAULT_NAME)),
-                    },
-                )
-            errors["base"] = "invalid_auth"
+            await self.async_set_unique_id(iot_id)
+            self._abort_if_unique_id_configured()
 
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_REFRESH_TOKEN,
-                    default=reconfigure_entry.data.get(CONF_REFRESH_TOKEN, ""),
-                ): str,
-                vol.Optional(
-                    CONF_NAME,
-                    default=reconfigure_entry.data.get(CONF_NAME, DEFAULT_NAME),
-                ): str,
-            }
-        )
+            return self.async_create_entry(
+                title=device_name,
+                data={
+                    **self._auth_data,
+                    CONF_IOT_ID: iot_id,
+                    CONF_NAME: device_name,
+                },
+            )
+
+        options = {}
+        for d in unconfigured:
+            iot_id = d.get("iotid") or d.get("iotId") or ""
+            dname = d.get("deviceName") or d.get("name") or f"设备({iot_id[:8]})"
+            options[iot_id] = dname
+
+        schema = vol.Schema({
+            vol.Required("iot_id"): vol.In(options),
+        })
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="pick_device",
             data_schema=schema,
-            errors=errors,
+            description_placeholders={
+                "count": str(len(options)),
+            },
         )
